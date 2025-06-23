@@ -1,40 +1,40 @@
-// Config
-const CACHE_NAME = 'wood-calc-demo-v2';
-const OFFLINE_URL = '/offline.html';
-const PRECACHE_URLS = [
+// sw.js - Service Worker File
+
+const CACHE_NAME = 'woodwizard-pro-v1';
+const urlsToCache = [
   '/',
-  '/index.html',
-  '/styles.css',
-  '/app.js',
-  '/icon-192x192.png',
-  '/icon-512x512.png'
+  'index.html',
+  'icon-192x192.png.png',
+  'icon-512x512.png.png'
 ];
 
-// Install Event
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
+      .then(cache => {
+        return cache.addAll(urlsToCache);
+      })
   );
 });
 
-// Fetch Event
 self.addEventListener('fetch', event => {
-  // Network-first strategy
   event.respondWith(
-    fetch(event.request)
-      .catch(() => caches.match(event.request) || caches.match(OFFLINE_URL))
+    caches.match(event.request)
+      .then(response => {
+        return response || fetch(event.request);
+      })
   );
 });
 
-// Activate Event
 self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) return caches.delete(cache);
+        cacheNames.map(cacheName => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
         })
       );
     })
